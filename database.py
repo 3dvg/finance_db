@@ -23,22 +23,21 @@ def obtain_sp500_tickers():
 def build_db(stocks):
     conn= sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    try:
-        for stock in stocks:
-            try:
-                c.execute("CREATE TABLE IF NOT EXISTS '{}' (Date DATETIME PRIMARY KEY, Open FLOAT, High FLOAT, Low FLOAT, Close FLOAT)".format(stock))
-            except:
-                print("Error creating table", stock)
-        conn.commit()
-    except Error as e:
-        print(e)
+    
+    for stock in stocks:
+        try:
+            c.execute("CREATE TABLE IF NOT EXISTS '{}' (Date DATETIME PRIMARY KEY, Open FLOAT, High FLOAT, Low FLOAT, Close FLOAT)".format(stock))
+        except Error as e:
+            print("Error creating table for", stock,e)
+    conn.commit()
     conn.close()
 
 def checkTables(db,stocks):
   conn = sqlite3.connect(db)
   cursor = conn.cursor()
-  cursor.execute("SELECT (name) FROM sqlite_master WHERE type='table';") 
-  print("TABLES: ", cursor.fetchall())
+  cursor.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table';") 
+  print("n tables: ", cursor.fetchall())
+  print("n stocks: ", len(stocks))
   conn.close()
 
 def insertData(db,stocks):
@@ -66,6 +65,8 @@ def checkData(db, stock):
   
   start_date = '2019-12-01 00-00-00'
   end_date = '2019-12-31 00-00-00'
+
+  print("(Date, Open, High, Low, Close)")
   cursor.execute("SELECT * FROM '{}' WHERE Date BETWEEN '{}' AND '{}'".format(stock,start_date,end_date))
   rows = cursor.fetchall()
   for row in rows:
@@ -75,7 +76,7 @@ def checkData(db, stock):
 
 if __name__ == "__main__":
     stocks = obtain_sp500_tickers()
-    # build_db(stocks)
-    # insertData(DB_NAME, stocks)
+    build_db(stocks)
+    insertData(DB_NAME, stocks)
     checkTables(DB_NAME,stocks)
-    #checkData(DB_NAME, 'AMZN')
+    checkData(DB_NAME, 'AMZN')
